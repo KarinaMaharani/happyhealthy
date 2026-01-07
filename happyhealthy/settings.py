@@ -5,15 +5,16 @@ Django settings for happyhealthy project.
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env file
 load_dotenv(BASE_DIR / '.env')
 
-SECRET_KEY = 'django-insecure-lq$9%d3p%runkda2o8-#&ht6^9eows35h@cx=vi)5tlaw2gq-$'
-DEBUG = True
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.0.2.2']
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-lq$9%d3p%runkda2o8-#&ht6^9eows35h@cx=vi)5tlaw2gq-$')
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.0.2.2', 'happyhealthy.vercel.app', '.vercel.app']
 
 # DrugBank API Configuration
 DRUGBANK_API_KEY = os.getenv('DRUGBANK_API_KEY', '')
@@ -65,12 +66,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'happyhealthy.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database configuration
+# Use PostgreSQL in production (Vercel), SQLite in development
+if os.getenv('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.getenv('DATABASE_URL'),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -85,10 +97,11 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-if DEBUG:
-    STATICFILES_DIRS = [BASE_DIR / 'static']
-else:
-    STATIC_ROOT = BASE_DIR / 'static'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Whitenoise configuration for static files
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

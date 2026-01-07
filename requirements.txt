@@ -6,6 +6,9 @@ urllib3
 django-cors-headers
 djangorestframework
 python-decouple
+python-dotenv
 drugbank-downloader
 bioversions
 lxml
+psycopg2-binary
+dj-database-url
