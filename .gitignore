@@ -35,6 +35,12 @@ staticfiles/
 # Environment
 .env
 
+# DrugBank Database Files (too large for GitHub)
+static/full database.xml
+static/drugbank.xml
+data/
+*.xml
+
 # IDE
 .vscode/
 .idea/
