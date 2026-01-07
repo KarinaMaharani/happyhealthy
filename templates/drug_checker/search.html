@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Drugs - Happy Healthy{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">🔍 Search Drugs</h2>
+        <p class="text-sm text-gray-600 mb-4">
+            Total drugs in database: <strong>{{ total_drugs|default:0 }}</strong>
+            {% if showing_partial %}
+            <span class="text-orange-600">(Showing first 100 - type to search all)</span>
+            {% endif %}
+        </p>
+        
+        <div class="mb-6">
+            <form id="searchForm" class="flex gap-2">
+                <input type="text" 
+                       id="searchInput"
+                       placeholder="Search drug name..." 
+                       class="flex-1 px-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                       autocomplete="off">
+                <button type="submit" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-2 py-3 rounded-xl font-semibold transition shadow-lg whitespace-nowrap">
+                    Search
+                </button>
+            </form>
+            <p class="text-xs text-gray-500 mt-2">Page <strong id="currentPage">1</strong> • Showing <strong id="resultCount">{{ all_drugs|length }}</strong> of {{ total_drugs|default:0 }} drugs</p>
+        </div>
+
+        {% if error %}
+        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-4">
+            <p class="font-semibold">Error</p>
+            <p class="text-sm">{{ error }}</p>
+        </div>
+        {% endif %}
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <thead class="bg-gradient-to-r from-blue-500 to-blue-600 text-white sticky top-0">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-sm font-semibold w-1/4">Drug Name</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold w-32">DrugBank ID</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold w-24">Type</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold w-1/3">Description</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold w-1/4">Categories</th>
+                        <th class="px-4 py-3 text-center text-sm font-semibold w-32">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="drugTableBody" class="divide-y divide-gray-200">
+                    {% for drug in all_drugs %}
+                    <tr class="hover:bg-blue-50 transition drug-row" 
+                        data-name="{{ drug.name|lower }}" 
+                        data-synonyms="{{ drug.synonyms|join:','|lower }}"
+                        data-id="{{ drug.drugbank_id|lower }}"
+                        data-categories="{{ drug.categories|join:','|lower }}">
+                        <td class="px-4 py-3">
+                            <div class="font-semibold text-gray-800">{{ drug.name }}</div>
+                            {% if drug.synonyms %}
+                            <div class="text-xs text-gray-500 mt-1">{{ drug.synonyms|slice:":2"|join:", " }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="font-mono text-xs text-gray-700">{{ drug.drugbank_id }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="inline-block px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">
+                                {{ drug.type|truncatewords:2 }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <p class="text-xs text-gray-600 line-clamp-2">{{ drug.description|default:"No description available"|truncatewords:20 }}</p>
+                        </td>
+                        <td class="px-4 py-3">
+                            {% if drug.categories %}
+                            <div class="flex flex-wrap gap-1">
+                                {% for cat in drug.categories|slice:":3" %}
+                                <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">{{ cat|truncatewords:2 }}</span>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <span class="text-xs text-gray-400">None</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <a href="{% url 'drug_detail' drug.drugbank_id %}" 
+                               class="inline-block bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-semibold transition">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                            No drugs loaded yet. Please wait for database to load.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination Controls -->
+        <div id="paginationContainer" class="flex justify-center items-center gap-2 mt-6">
+            <button id="prevPage" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition">
+                ← Prev
+            </button>
+            <div id="pageNumbers" class="flex gap-1">
+            </div>
+            <button id="nextPage" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition">
+                Next →
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+const searchForm = document.getElementById('searchForm');
+const searchInput = document.getElementById('searchInput');
+const drugTableBody = document.getElementById('drugTableBody');
+const resultCount = document.getElementById('resultCount');
+const currentPageEl = document.getElementById('currentPage');
+const prevPageBtn = document.getElementById('prevPage');
+const nextPageBtn = document.getElementById('nextPage');
+const pageNumbers = document.getElementById('pageNumbers');
+
+let currentPage = 1;
+let totalPages = 1;
+let allResults = [];
+const resultsPerPage = 20;
+
+// Only search when form is submitted (Enter key or Search button)
+searchForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const query = searchInput.value.trim();
+    
+    if (query.length < 1) {
+        // Reload page to show default 100 drugs
+        location.reload();
+        return;
+    }
+    
+    // Show loading state
+    drugTableBody.innerHTML = `
+        <tr>
+            <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                <svg class="animate-spin h-8 w-8 mx-auto mb-2 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Searching...
+            </td>
+        </tr>
+    `;
+    
+    // Fetch filtered results from API
+    fetch(`/drugs/search/api/?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+            allResults = data.results;
+            currentPage = 1;
+            totalPages = Math.ceil(allResults.length / resultsPerPage);
+            
+            resultCount.textContent = data.total.toLocaleString();
+            
+            if (allResults.length === 0) {
+                drugTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-4 py-8 text-center">
+                            <div class="text-5xl mb-3">❌</div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">No Drugs Found</h3>
+                            <p class="text-gray-600">No results matching "${query}"</p>
+                        </td>
+                    </tr>
+                `;
+                updatePagination();
+                return;
+            }
+            
+            displayCurrentPage();
+            updatePagination();
+        })
+        .catch(error => {
+            console.error('Search error:', error);
+            drugTableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="px-4 py-8 text-center text-red-500">
+                        ❌ Error loading results. Please try again.
+                    </td>
+                </tr>
+            `;
+        });
+});
+
+function displayCurrentPage() {
+    // Clear table
+    drugTableBody.innerHTML = '';
+    
+    // Calculate start and end indices
+    const start = (currentPage - 1) * resultsPerPage;
+    const end = Math.min(start + resultsPerPage, allResults.length);
+    const pageResults = allResults.slice(start, end);
+    
+    // Populate table with current page results
+    pageResults.forEach(drug => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-blue-50 transition';
+                
+                const synonymsHtml = drug.synonyms && drug.synonyms.length > 0
+                    ? `<div class="text-xs text-gray-500 mt-1">${drug.synonyms.slice(0, 2).join(', ')}</div>`
+                    : '';
+                
+                const categoriesHtml = drug.categories && drug.categories.length > 0
+                    ? drug.categories.slice(0, 3).map(cat => 
+                        `<span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">${cat.substring(0, 20)}</span>`
+                      ).join('')
+                    : '<span class="text-xs text-gray-400">None</span>';
+                
+                row.innerHTML = `
+                    <td class="px-4 py-3">
+                        <div class="font-semibold text-gray-800">${drug.name}</div>
+                        ${synonymsHtml}
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="font-mono text-xs text-gray-700">${drug.drugbank_id}</span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="inline-block px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">
+                            ${drug.type.substring(0, 20)}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <p class="text-xs text-gray-600 line-clamp-2">${drug.description || 'No description available'}</p>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex flex-wrap gap-1">
+                            ${categoriesHtml}
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <a href="/drugs/detail/${drug.drugbank_id}/" 
+                           class="inline-block bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-semibold transition">
+                            View
+                        </a>
+                    </td>
+                `;
+                
+        drugTableBody.appendChild(row);
+    });
+    
+    currentPageEl.textContent = currentPage;
+}
+
+function updatePagination() {
+    // Update button states
+    prevPageBtn.disabled = currentPage === 1;
+    nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
+    
+    // Generate page numbers
+    pageNumbers.innerHTML = '';
+    
+    if (totalPages <= 1) {
+        document.getElementById('paginationContainer').style.display = 'none';
+        return;
+    }
+    
+    document.getElementById('paginationContainer').style.display = 'flex';
+    
+    // Show max 5 page numbers
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + 4);
+    
+    if (endPage - startPage < 4) {
+        startPage = Math.max(1, endPage - 4);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = i;
+        pageBtn.className = `px-3 py-1 rounded-lg text-sm font-semibold transition ${i === currentPage ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300'}`;
+        pageBtn.onclick = () => {
+            currentPage = i;
+            displayCurrentPage();
+            updatePagination();
+        };
+        pageNumbers.appendChild(pageBtn);
+    }
+}
+
+prevPageBtn.addEventListener('click', () => {
+    if (currentPage > 1) {
+        currentPage--;
+        displayCurrentPage();
+        updatePagination();
+    }
+});
+
+nextPageBtn.addEventListener('click', () => {
+    if (currentPage < totalPages) {
+        currentPage++;
+        displayCurrentPage();
+        updatePagination();
+    }
+});
+
+// Initialize pagination on page load
+window.addEventListener('load', () => {
+    const rows = document.querySelectorAll('.drug-row');
+    allResults = Array.from(rows).map(row => ({
+        name: row.querySelector('.font-semibold').textContent,
+        html: row.outerHTML
+    }));
+    totalPages = Math.ceil({{ all_drugs|length }} / resultsPerPage);
+    updatePagination();
+});
+</script>
+{% endblock %}

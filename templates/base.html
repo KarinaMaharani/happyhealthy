@@ -1,0 +1,144 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Happy Healthy{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .mobile-container {
+            max-width: 400px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: #f8f9fa;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 400px;
+            width: 100%;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 12px 0;
+        }
+        .nav-item {
+            text-align: center;
+            padding: 8px;
+            transition: all 0.3s;
+        }
+        .nav-item:hover {
+            background: #f3f4f6;
+            border-radius: 12px;
+        }
+        .nav-item.active {
+            color: #3b82f6;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50">
+    <div class="mobile-container">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl font-bold">🏥 Happy Healthy</h1>
+                <div class="flex items-center gap-3">
+                    {% if user.is_authenticated %}
+                    <div class="text-right">
+                        <span class="text-sm block">Hi, {{ user.username }}!</span>
+                        <span class="text-xs opacity-80">{{ user.profile.get_role_display }}</span>
+                    </div>
+                    <a href="{% url 'logout' %}" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-1 rounded-lg text-xs font-semibold transition">
+                        Logout
+                    </a>
+                    {% elif request.session.is_guest %}
+                    <span class="text-sm">Guest Mode</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+        <div class="p-4">
+            {% for message in messages %}
+            <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-3 mb-2 rounded">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Main Content -->
+        <div class="pb-20">
+            {% block content %}
+            {% endblock %}
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="grid grid-cols-5 gap-1">
+                <a href="{% url 'search_drugs' %}" class="nav-item {% if request.resolver_match.url_name == 'search_drugs' %}active{% endif %}">
+                    <div class="text-2xl">🔍</div>
+                    <div class="text-xs mt-1">Search</div>
+                </a>
+                <a href="{% url 'interaction_checker' %}" class="nav-item {% if request.resolver_match.url_name == 'interaction_checker' %}active{% endif %}">
+                    <div class="text-2xl">⚠️</div>
+                    <div class="text-xs mt-1">Check</div>
+                </a>
+                {% if user.is_authenticated %}
+                    {% if user.profile.role == 'patient' %}
+                    <a href="{% url 'record_symptom' %}" class="nav-item {% if request.resolver_match.url_name == 'record_symptom' or request.resolver_match.url_name == 'my_symptoms' %}active{% endif %}">
+                        <div class="text-2xl">📝</div>
+                        <div class="text-xs mt-1">Symptoms</div>
+                    </a>
+                    <a href="{% url 'patient_requests' %}" class="nav-item {% if request.resolver_match.url_name == 'patient_requests' %}active{% endif %}">
+                        <div class="text-2xl">👥</div>
+                        <div class="text-xs mt-1">Caregivers</div>
+                    </a>
+                    {% elif user.profile.role == 'caregiver' %}
+                    <a href="{% url 'caregiver_dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'caregiver_dashboard' %}active{% endif %}">
+                        <div class="text-2xl">👨‍⚕️</div>
+                        <div class="text-xs mt-1">Patients</div>
+                    </a>
+                    <a href="{% url 'saved_drugs' %}" class="nav-item {% if request.resolver_match.url_name == 'saved_drugs' %}active{% endif %}">
+                        <div class="text-2xl">💾</div>
+                        <div class="text-xs mt-1">Saved</div>
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'history' %}" class="nav-item {% if request.resolver_match.url_name == 'history' %}active{% endif %}">
+                        <div class="text-2xl">📊</div>
+                        <div class="text-xs mt-1">History</div>
+                    </a>
+                {% else %}
+                <a href="{% url 'login' %}" class="nav-item">
+                    <div class="text-2xl">🔐</div>
+                    <div class="text-xs mt-1">Login</div>
+                </a>
+                <a href="{% url 'register' %}" class="nav-item">
+                    <div class="text-2xl">📝</div>
+                    <div class="text-xs mt-1">Register</div>
+                </a>
+                <a href="{% url 'guest_continue' %}" class="nav-item">
+                    <div class="text-2xl">👤</div>
+                    <div class="text-xs mt-1">Guest</div>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

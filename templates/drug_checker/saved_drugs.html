@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Saved Drugs - Happy Healthy{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">💾 Saved Drugs</h2>
+        
+        {% if saved_drugs %}
+        <div class="space-y-3">
+            {% for drug in saved_drugs %}
+            <div class="border border-gray-200 rounded-xl p-4">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <h3 class="font-bold text-gray-800">{{ drug.drug_name }}</h3>
+                        <p class="text-sm text-gray-600">ID: {{ drug.drugbank_id }}</p>
+                        {% if drug.notes %}
+                        <p class="text-sm text-gray-700 mt-2 italic">"{{ drug.notes }}"</p>
+                        {% endif %}
+                        <p class="text-xs text-gray-500 mt-2">Saved: {{ drug.created_at|date:"M d, Y" }}</p>
+                    </div>
+                    <a href="{% url 'drug_detail' drug.drugbank_id %}" 
+                       class="ml-4 bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition">
+                        View
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 text-gray-500">
+            <div class="text-6xl mb-4">💾</div>
+            <p class="text-lg mb-2">No saved drugs yet</p>
+            <p class="text-sm mb-4">Save drugs for quick access later</p>
+            <a href="{% url 'search_drugs' %}" class="bg-blue-500 text-white px-6 py-3 rounded-xl hover:bg-blue-600 transition inline-block">
+                Search Drugs
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

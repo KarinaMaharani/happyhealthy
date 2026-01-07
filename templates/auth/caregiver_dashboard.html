@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Caregiver Dashboard - Happy Healthy{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">👨‍⚕️ Caregiver Dashboard</h2>
+                <p class="text-sm text-gray-600">Manage patients you're monitoring</p>
+            </div>
+            <a href="{% url 'add_patient' %}" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
+                + Add Patient
+            </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="bg-blue-50 rounded-xl p-4">
+                <div class="text-2xl font-bold text-blue-600">{{ active_count }}</div>
+                <div class="text-sm text-gray-600">Active Patients</div>
+            </div>
+            <div class="bg-yellow-50 rounded-xl p-4">
+                <div class="text-2xl font-bold text-yellow-600">{{ pending_count }}</div>
+                <div class="text-sm text-gray-600">Pending Requests</div>
+            </div>
+        </div>
+
+        <!-- Concerning Symptoms Section -->
+        {% if concerning_symptoms %}
+        <div class="mb-6 bg-red-50 border-l-4 border-red-500 rounded-xl p-4">
+            <h3 class="font-semibold text-red-800 mb-3 flex items-center gap-2">
+                <span class="text-xl">⚠️</span>
+                Concerning Symptoms (Last 7 Days)
+            </h3>
+            <div class="space-y-2">
+                {% for symptom in concerning_symptoms %}
+                <div class="bg-white rounded-lg p-3 border border-red-200">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-800">{{ symptom.patient.username }}</div>
+                            <div class="text-sm text-gray-600 mt-1">
+                                <span class="font-medium">{{ symptom.get_symptom_type_display }}</span>
+                                <span class="ml-2 px-2 py-0.5 rounded-full text-xs font-bold
+                                    {% if symptom.severity == 4 %}bg-red-500 text-white
+                                    {% elif symptom.severity == 3 %}bg-orange-500 text-white
+                                    {% elif symptom.severity == 2 %}bg-yellow-500 text-white
+                                    {% else %}bg-green-500 text-white{% endif %}">
+                                    Severity {{ symptom.severity }}
+                                </span>
+                            </div>
+                            {% if symptom.notes %}
+                            <p class="text-xs text-gray-500 mt-1 italic">"{{ symptom.notes|truncatewords:15 }}"</p>
+                            {% endif %}
+                        </div>
+                        <span class="text-xs text-gray-500">{{ symptom.recorded_at|date:"M d, H:i" }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Relationships List -->
+        <h3 class="font-semibold text-gray-700 mb-3">Your Patients</h3>
+        {% if relationships %}
+        <div class="space-y-3">
+            {% for rel in relationships %}
+            <div class="border border-gray-200 rounded-xl p-4 {% if rel.status == 'active' %}bg-green-50 border-green-200{% elif rel.status == 'pending' %}bg-yellow-50 border-yellow-200{% elif rel.status == 'rejected' %}bg-red-50 border-red-200{% endif %}">
+                <div class="flex items-start gap-3">
+                    <div class="text-3xl flex-shrink-0">🤒</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h4 class="font-semibold text-gray-800">{{ rel.patient.username }}</h4>
+                            <span class="px-2 py-1 rounded-full text-xs font-bold flex-shrink-0
+                                {% if rel.status == 'active' %}bg-green-500 text-white
+                                {% elif rel.status == 'pending' %}bg-yellow-500 text-white
+                                {% elif rel.status == 'rejected' %}bg-red-500 text-white
+                                {% else %}bg-gray-500 text-white{% endif %}">
+                                {{ rel.get_status_display }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-600 mt-1 break-all">{{ rel.patient.email }}</p>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Requested: {{ rel.created_at|date:"M d, Y" }}
+                            {% if rel.approved_date %}
+                            • Approved: {{ rel.approved_date|date:"M d, Y" }}
+                            {% endif %}
+                        </p>
+                        {% if rel.request_message %}
+                        <p class="text-sm text-gray-600 mt-2 italic bg-white p-2 rounded">"{{ rel.request_message }}"</p>
+                        {% endif %}
+                        <div class="flex gap-2 mt-3">
+                            {% if rel.status == 'active' %}
+                            <a href="{% url 'patient_activity' rel.patient.id %}" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-xs transition text-center">
+                                View Activity
+                            </a>
+                            <form method="POST" action="{% url 'remove_patient' rel.id %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs transition" onclick="return confirm('Stop monitoring this patient?')">
+                                    Remove
+                                </button>
+                            </form>
+                            {% elif rel.status == 'pending' %}
+                            <span class="text-xs text-gray-600 italic">Waiting for approval...</span>
+                            {% elif rel.status == 'rejected' %}
+                            <span class="text-xs text-red-600 italic">Request rejected</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 text-gray-500">
+            <div class="text-6xl mb-4">👥</div>
+            <p class="text-lg mb-2">No patients yet</p>
+            <p class="text-sm mb-4">Add patients to monitor their health</p>
+            <a href="{% url 'add_patient' %}" class="bg-blue-500 text-white px-6 py-3 rounded-xl hover:bg-blue-600 transition inline-block">
+                Add Your First Patient
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

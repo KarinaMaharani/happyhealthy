@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ patient.username }}'s Activity - Happy Healthy{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <div class="mb-6">
+            <a href="{% url 'caregiver_dashboard' %}" class="text-blue-600 hover:underline text-sm">← Back to Dashboard</a>
+        </div>
+        
+        <div class="flex items-center gap-3 mb-6">
+            <div class="text-4xl">🤒</div>
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">{{ patient.username }}</h2>
+                <p class="text-sm text-gray-600">{{ patient.email }}</p>
+                <p class="text-xs text-gray-500">Monitoring since: {{ relationship.approved_date|date:"M d, Y" }}</p>
+            </div>
+        </div>
+
+        <!-- Stats Summary -->
+        <div class="grid grid-cols-3 gap-3 mb-6">
+            <div class="bg-blue-50 rounded-xl p-3 text-center">
+                <div class="text-xl font-bold text-blue-600">{{ searches.count }}</div>
+                <div class="text-xs text-gray-600">Recent Searches</div>
+            </div>
+            <div class="bg-yellow-50 rounded-xl p-3 text-center">
+                <div class="text-xl font-bold text-yellow-600">{{ interactions.count }}</div>
+                <div class="text-xs text-gray-600">Interactions Checked</div>
+            </div>
+            <div class="bg-green-50 rounded-xl p-3 text-center">
+                <div class="text-xl font-bold text-green-600">{{ saved_drugs.count }}</div>
+                <div class="text-xs text-gray-600">Saved Drugs</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Drugs -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">💾 Saved Medications</h3>
+        {% if saved_drugs %}
+        <div class="space-y-2">
+            {% for drug in saved_drugs %}
+            <div class="border-b border-gray-200 pb-2">
+                <p class="font-semibold text-gray-800">{{ drug.drug_name }}</p>
+                <p class="text-xs text-gray-500">ID: {{ drug.drugbank_id }}</p>
+                {% if drug.notes %}
+                <p class="text-sm text-gray-600 italic mt-1">"{{ drug.notes }}"</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-sm text-center py-4">No saved medications</p>
+        {% endif %}
+    </div>
+
+    <!-- Recent Interaction Checks -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">⚠️ Recent Interaction Checks</h3>
+        {% if interactions %}
+        <div class="space-y-3">
+            {% for check in interactions %}
+            <div class="border-l-4 {% if check.severity == 'major' %}border-red-500 bg-red-50{% elif check.severity == 'moderate' %}border-yellow-500 bg-yellow-50{% else %}border-blue-500 bg-blue-50{% endif %} p-3 rounded-lg">
+                <div class="flex justify-between items-start">
+                    <p class="font-semibold text-gray-800 text-sm">{{ check.drug1_name }} + {{ check.drug2_name }}</p>
+                    <span class="px-2 py-1 rounded text-xs font-bold {% if check.severity == 'major' %}bg-red-500 text-white{% elif check.severity == 'moderate' %}bg-yellow-500 text-white{% else %}bg-blue-500 text-white{% endif %}">
+                        {{ check.severity|upper }}
+                    </span>
+                </div>
+                <p class="text-xs text-gray-600 mt-1">{{ check.description|truncatewords:20 }}</p>
+                <p class="text-xs text-gray-500 mt-1">{{ check.checked_at|date:"M d, Y H:i" }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-sm text-center py-4">No interaction checks yet</p>
+        {% endif %}
+    </div>
+
+    <!-- Recent Searches -->
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">🔍 Recent Drug Searches</h3>
+        {% if searches %}
+        <div class="space-y-2">
+            {% for search in searches %}
+            <div class="border-b border-gray-200 pb-2">
+                <p class="font-semibold text-gray-800 text-sm">{{ search.drug_name }}</p>
+                <p class="text-xs text-gray-500">{{ search.searched_at|date:"M d, Y H:i" }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-sm text-center py-4">No search history</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+
+{% block title %}Check Interactions - Happy Healthy{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">⚠️ Drug Interaction Checker</h2>
+        
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Drug 1</label>
+                <div class="relative">
+                    <input type="text" 
+                           name="drug1_name"
+                           id="drug1Input" 
+                           placeholder="Start typing drug name..."
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                           autocomplete="off"
+                           required>
+                    <input type="hidden" name="drug1" id="drug1Id" value="{{ drug1 }}">
+                    <div id="autocomplete1" class="absolute z-10 w-full bg-white border border-gray-300 rounded-xl shadow-lg mt-1 hidden max-h-64 overflow-y-auto"></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Selected ID: <span id="drug1IdDisplay" class="font-mono">{{ drug1|default:"None" }}</span></p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Drug 2</label>
+                <div class="relative">
+                    <input type="text" 
+                           name="drug2_name"
+                           id="drug2Input" 
+                           placeholder="Start typing drug name..."
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                           autocomplete="off"
+                           required>
+                    <input type="hidden" name="drug2" id="drug2Id" value="{{ drug2 }}">
+                    <div id="autocomplete2" class="absolute z-10 w-full bg-white border border-gray-300 rounded-xl shadow-lg mt-1 hidden max-h-64 overflow-y-auto"></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Selected ID: <span id="drug2IdDisplay" class="font-mono">{{ drug2|default:"None" }}</span></p>
+            </div>
+            
+            <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-semibold transition transform hover:scale-105">
+                Check Interactions
+            </button>
+        </form>
+
+        <div class="mt-4 bg-blue-50 p-4 rounded-xl">
+            <p class="text-sm text-blue-800">
+                <strong>Tip:</strong> Start typing a drug name and select from the suggestions. The DrugBank ID will be automatically filled.
+            </p>
+        </div>
+    </div>
+
+    {% if error %}
+    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-4">
+        <p>{{ error }}</p>
+    </div>
+    {% endif %}
+
+    {% if interactions is not None %}
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-800">
+                Interaction Results
+            </h3>
+            <button onclick="location.reload()" class="text-sm bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition">
+                ← Check Another
+            </button>
+        </div>
+        
+        {% if total == 0 %}
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg text-center">
+            <div class="text-5xl mb-3">ℹ️</div>
+            <h4 class="text-lg font-bold text-blue-900 mb-2">No Interaction Data Available</h4>
+            <p class="text-blue-800 mb-3">
+                No documented interactions found between <strong>{{ drug1 }}</strong> and <strong>{{ drug2 }}</strong> in our database.
+            </p>
+            <p class="text-sm text-blue-700">
+                <strong>Note:</strong> This does not guarantee the drugs are safe to take together. 
+                The database may not have complete interaction information. 
+                Always consult with a healthcare provider before combining medications.
+            </p>
+            <p class="text-xs text-blue-600 mt-2 italic">
+                Database will be updated regularly with new interaction data.
+            </p>
+        </div>
+        {% else %}
+        <div class="bg-green-100 border-l-4 border-green-500 p-4 rounded-lg mb-4">
+            <p class="text-green-800">
+                <strong>{{ total }} interaction{% if total != 1 %}s{% endif %} found</strong> between the selected drugs.
+            </p>
+        </div>
+        
+        <div class="space-y-4">
+            {% for interaction in interactions %}
+            <div class="border-l-4 {% if interaction.severity == 'major' %}border-red-500 bg-red-50{% elif interaction.severity == 'moderate' %}border-yellow-500 bg-yellow-50{% else %}border-blue-500 bg-blue-50{% endif %} p-4 rounded-lg">
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-bold text-gray-800">
+                        {{ interaction.ingredient.name }} + {{ interaction.affected_ingredient.name }}
+                    </h4>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold {% if interaction.severity == 'major' %}bg-red-500 text-white{% elif interaction.severity == 'moderate' %}bg-yellow-500 text-white{% else %}bg-blue-500 text-white{% endif %}">
+                        {{ interaction.severity|upper }}
+                    </span>
+                </div>
+                <p class="text-sm text-gray-700 mb-2">{{ interaction.description }}</p>
+                {% if interaction.extended_description %}
+                <details class="text-sm">
+                    <summary class="cursor-pointer text-blue-600 hover:text-blue-800">More details</summary>
+                    <p class="mt-2 text-gray-600">{{ interaction.extended_description|truncatewords:50 }}</p>
+                </details>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function setupAutocomplete(inputId, autocompleteId, hiddenInputId, displayId) {
+    const input = document.getElementById(inputId);
+    const autocomplete = document.getElementById(autocompleteId);
+    const hiddenInput = document.getElementById(hiddenInputId);
+    const display = document.getElementById(displayId);
+    let debounceTimer;
+
+    input.addEventListener('input', function(e) {
+        clearTimeout(debounceTimer);
+        const query = e.target.value.trim();
+        
+        if (query.length < 2) {
+            autocomplete.classList.add('hidden');
+            return;
+        }
+        
+        debounceTimer = setTimeout(() => {
+            fetch(`/drugs/autocomplete/?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.results && data.results.length > 0) {
+                        autocomplete.innerHTML = data.results.map(drug => `
+                            <div class="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 autocomplete-item" 
+                                 data-name="${drug.name}" 
+                                 data-id="${drug.drugbank_id}">
+                                <div class="font-semibold text-gray-800">${drug.name}</div>
+                                <div class="text-xs text-gray-500">${drug.drugbank_id} • ${drug.type}</div>
+                            </div>
+                        `).join('');
+                        autocomplete.classList.remove('hidden');
+                        
+                        // Add click handlers
+                        autocomplete.querySelectorAll('.autocomplete-item').forEach(item => {
+                            item.addEventListener('click', function() {
+                                input.value = this.dataset.name;
+                                hiddenInput.value = this.dataset.id;
+                                display.textContent = this.dataset.id;
+                                autocomplete.classList.add('hidden');
+                            });
+                        });
+                    } else {
+                        autocomplete.classList.add('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.error('Autocomplete error:', error);
+                    autocomplete.classList.add('hidden');
+                });
+        }, 300);
+    });
+
+    // Close autocomplete when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !autocomplete.contains(e.target)) {
+            autocomplete.classList.add('hidden');
+        }
+    });
+}
+
+// Setup autocomplete for both drug inputs
+setupAutocomplete('drug1Input', 'autocomplete1', 'drug1Id', 'drug1IdDisplay');
+setupAutocomplete('drug2Input', 'autocomplete2', 'drug2Id', 'drug2IdDisplay');
+</script>
+{% endblock %}

@@ -1,0 +1,11 @@
+django>=5.1.2
+gunicorn
+whitenoise
+requests
+urllib3
+django-cors-headers
+djangorestframework
+python-decouple
+drugbank-downloader
+bioversions
+lxml

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}My Caregivers - Happy Healthy{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">👨‍⚕️ My Caregivers</h2>
+            <p class="text-sm text-gray-600">Manage who can monitor your health</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="bg-green-50 rounded-xl p-4">
+                <div class="text-2xl font-bold text-green-600">{{ active_count }}</div>
+                <div class="text-sm text-gray-600">Active Caregivers</div>
+            </div>
+            <div class="bg-yellow-50 rounded-xl p-4">
+                <div class="text-2xl font-bold text-yellow-600">{{ pending_count }}</div>
+                <div class="text-sm text-gray-600">Pending Requests</div>
+            </div>
+        </div>
+
+        {% if pending_count > 0 %}
+        <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg mb-6">
+            <p class="text-sm text-gray-700">
+                <strong>⚠️ You have {{ pending_count }} pending request{{ pending_count|pluralize }}!</strong>
+            </p>
+        </div>
+        {% endif %}
+
+        {% if requests %}
+        <div class="space-y-3">
+            {% for req in requests %}
+            <div class="border border-gray-200 rounded-xl p-4 {% if req.status == 'pending' %}bg-yellow-50 border-yellow-300{% elif req.status == 'active' %}bg-green-50 border-green-200{% elif req.status == 'rejected' %}bg-red-50 border-red-200{% endif %}">
+                <div class="space-y-3">
+                    <!-- Caregiver Info -->
+                    <div class="flex items-start gap-3">
+                        <div class="text-2xl flex-shrink-0">👨‍⚕️</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h4 class="font-semibold text-gray-800">{{ req.caregiver.username }}</h4>
+                                <span class="px-2 py-1 rounded-full text-xs font-bold flex-shrink-0
+                                    {% if req.status == 'active' %}bg-green-500 text-white
+                                    {% elif req.status == 'pending' %}bg-yellow-500 text-white
+                                    {% elif req.status == 'rejected' %}bg-red-500 text-white
+                                    {% else %}bg-gray-500 text-white{% endif %}">
+                                    {{ req.get_status_display }}
+                                </span>
+                            </div>
+                            <p class="text-xs text-gray-600 mt-1 break-all">{{ req.caregiver.email }}</p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Requested: {{ req.created_at|date:"M d, Y H:i" }}
+                                {% if req.approved_date %}
+                                • Approved: {{ req.approved_date|date:"M d, Y" }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Message -->
+                    {% if req.request_message %}
+                    <p class="text-sm text-gray-600 italic bg-white p-3 rounded break-words">"{{ req.request_message }}"</p>
+                    {% endif %}
+                    
+                    <!-- Action Buttons -->
+                    {% if req.status == 'pending' %}
+                    <div class="flex gap-2">
+                        <form method="POST" action="{% url 'approve_caregiver' req.id %}" class="flex-1">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
+                                ✓ Approve
+                            </button>
+                        </form>
+                        <form method="POST" action="{% url 'reject_caregiver' req.id %}" class="flex-1">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition" onclick="return confirm('Reject this monitoring request?')">
+                                ✗ Reject
+                            </button>
+                        </form>
+                    </div>
+                    {% elif req.status == 'active' %}
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-green-600 font-semibold flex items-center gap-2">
+                            ✓ Monitoring Active
+                        </span>
+                        <form method="POST" action="{% url 'reject_caregiver' req.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded-lg text-xs transition" onclick="return confirm('Remove this caregiver?')">
+                                Remove
+                            </button>
+                        </form>
+                    </div>
+                    {% elif req.status == 'rejected' %}
+                    <div class="text-sm text-red-600 font-semibold">❌ Request Rejected</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 text-gray-500">
+            <div class="text-6xl mb-4">📭</div>
+            <p class="text-lg mb-2">No caregiver requests</p>
+            <p class="text-sm">When a caregiver requests to monitor your health, they will appear here.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

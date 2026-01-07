@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}About - Happy Healthy{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6">About Happy Healthy</h2>
+        
+        <div class="space-y-6">
+            <div>
+                <h3 class="text-xl font-semibold text-blue-600 mb-3">🎯 Our Mission</h3>
+                <p class="text-gray-700">
+                    Happy Healthy is dedicated to providing easy access to drug interaction information. 
+                    We help patients, caregivers, and healthcare professionals make informed decisions 
+                    about medication safety through our intuitive drug checking platform.
+                </p>
+            </div>
+            
+            <div>
+                <h3 class="text-xl font-semibold text-blue-600 mb-3">✨ Features</h3>
+                <ul class="space-y-2 text-gray-700">
+                    <li class="flex items-start">
+                        <span class="text-blue-500 mr-2">•</span>
+                        <span>Search comprehensive drug database powered by DrugBank</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-blue-500 mr-2">•</span>
+                        <span>Check drug-drug interactions with severity ratings</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-blue-500 mr-2">•</span>
+                        <span>Save frequently used medications for quick access</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-blue-500 mr-2">•</span>
+                        <span>Track your search and interaction history</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-blue-500 mr-2">•</span>
+                        <span>Mobile-optimized interface for on-the-go access</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div>
+                <h3 class="text-xl font-semibold text-blue-600 mb-3">🔬 Data Source</h3>
+                <p class="text-gray-700 mb-2">
+                    Our drug information is powered by the DrugBank Clinical API, a trusted and 
+                    comprehensive database containing detailed drug information, interactions, 
+                    indications, and adverse effects.
+                </p>
+                <a href="https://www.drugbank.com" target="_blank" 
+                   class="text-blue-600 hover:underline text-sm">
+                    Learn more about DrugBank →
+                </a>
+            </div>
+            
+            <div>
+                <h3 class="text-xl font-semibold text-blue-600 mb-3">⚠️ Important Disclaimer</h3>
+                <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg">
+                    <p class="text-gray-700 text-sm">
+                        This application is for informational purposes only and does not replace 
+                        professional medical advice, diagnosis, or treatment. Always consult your 
+                        physician or pharmacist before starting, stopping, or changing any medication.
+                    </p>
+                </div>
+            </div>
+            
+            <div>
+                <h3 class="text-xl font-semibold text-blue-600 mb-3">📧 Contact</h3>
+                <p class="text-gray-700">
+                    Have questions or feedback? We'd love to hear from you!
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Version Info -->
+    <div class="text-center text-gray-500 text-sm">
+        <p>Happy Healthy v1.0</p>
+        <p>Built with Django & DrugBank API</p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}My History - Happy Healthy{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <!-- Search History -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">📋 Search History</h2>
+        
+        {% if searches %}
+        <div class="space-y-2">
+            {% for search in searches %}
+            <div class="border-b border-gray-200 pb-2">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="font-semibold text-gray-800">{{ search.drug_name }}</p>
+                        <p class="text-xs text-gray-500">{{ search.searched_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-gray-500">
+            <div class="text-4xl mb-2">📭</div>
+            <p>No search history yet</p>
+            <a href="{% url 'search_drugs' %}" class="text-blue-600 hover:underline text-sm mt-2 inline-block">Start searching</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Interaction Checks -->
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">⚠️ Interaction Checks</h2>
+        
+        {% if interactions %}
+        <div class="space-y-3">
+            {% for check in interactions %}
+            <div class="border-l-4 {% if check.severity == 'major' %}border-red-500 bg-red-50{% elif check.severity == 'moderate' %}border-yellow-500 bg-yellow-50{% else %}border-blue-500 bg-blue-50{% endif %} p-4 rounded-lg">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="font-semibold text-gray-800">{{ check.drug1_name }} + {{ check.drug2_name }}</p>
+                    <span class="px-2 py-1 rounded text-xs font-bold {% if check.severity == 'major' %}bg-red-500 text-white{% elif check.severity == 'moderate' %}bg-yellow-500 text-white{% else %}bg-blue-500 text-white{% endif %}">
+                        {{ check.severity|upper }}
+                    </span>
+                </div>
+                <p class="text-sm text-gray-600 mb-1">{{ check.description|truncatewords:30 }}</p>
+                <p class="text-xs text-gray-500">{{ check.checked_at|date:"M d, Y H:i" }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-gray-500">
+            <div class="text-4xl mb-2">📭</div>
+            <p>No interaction checks yet</p>
+            <a href="{% url 'interaction_checker' %}" class="text-blue-600 hover:underline text-sm mt-2 inline-block">Check interactions</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Drug Details - Happy Healthy{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    {% if error %}
+    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-4">
+        <p class="font-semibold">Error</p>
+        <p>{{ error }}</p>
+    </div>
+    <div class="text-center">
+        <a href="{% url 'search_drugs' %}" class="text-blue-600 hover:underline">← Back to Search</a>
+    </div>
+    {% elif drug %}
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <div class="mb-6">
+            <a href="{% url 'search_drugs' %}" class="text-blue-600 hover:underline text-sm">← Back to Search</a>
+        </div>
+        
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">{{ drug.name }}</h2>
+        
+        <div class="space-y-4">
+            <div>
+                <h3 class="font-semibold text-gray-700 mb-2">DrugBank ID</h3>
+                <p class="text-gray-600">{{ drug.drugbank_id }}</p>
+            </div>
+            
+            {% if drug.cas_number %}
+            <div>
+                <h3 class="font-semibold text-gray-700 mb-2">CAS Number</h3>
+                <p class="text-gray-600">{{ drug.cas_number }}</p>
+            </div>
+            {% endif %}
+            
+            {% if drug.description %}
+            <div>
+                <h3 class="font-semibold text-gray-700 mb-2">Description</h3>
+                <p class="text-gray-600 text-sm">{{ drug.description|truncatewords:100 }}</p>
+            </div>
+            {% endif %}
+            
+            {% if drug.indication %}
+            <div>
+                <h3 class="font-semibold text-gray-700 mb-2">Indications</h3>
+                <p class="text-gray-600 text-sm">{{ drug.indication|truncatewords:80 }}</p>
+            </div>
+            {% endif %}
+            
+            {% if drug.categories %}
+            <div>
+                <h3 class="font-semibold text-gray-700 mb-2">Categories</h3>
+                <div class="flex flex-wrap gap-2">
+                    {% for category in drug.categories|slice:":5" %}
+                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs">{{ category.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="mt-6 pt-6 border-t border-gray-200">
+            <form method="POST" action="{% url 'save_drug' %}">
+                {% csrf_token %}
+                <input type="hidden" name="drugbank_id" value="{{ drug.drugbank_id }}">
+                <input type="hidden" name="drug_name" value="{{ drug.name }}">
+                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold transition">
+                    💾 Save to Favorites
+                </button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+        <div class="text-4xl mb-4">🔍</div>
+        <p class="text-gray-600">Loading drug information...</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

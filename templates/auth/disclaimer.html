@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Terms & Disclaimer - Happy Healthy{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-purple-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-3xl w-full">
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">⚕️ Welcome to Happy Healthy</h1>
+            <p class="text-gray-600">Please read and accept our terms to continue</p>
+        </div>
+
+        <div class="bg-gray-50 rounded-xl p-6 mb-6 max-h-96 overflow-y-auto border border-gray-200">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Medical Disclaimer & Terms of Use</h2>
+            
+            <div class="space-y-4 text-sm text-gray-700">
+                <section>
+                    <h3 class="font-bold text-gray-800 mb-2">1. Not a Substitute for Professional Medical Advice</h3>
+                    <p>
+                        Happy Healthy is a drug interaction checker and mental health symptom tracking tool. 
+                        <strong>This application is NOT a substitute for professional medical advice, diagnosis, or treatment.</strong>
+                        Always seek the advice of your physician or other qualified health provider with any questions 
+                        you may have regarding a medical condition or medication.
+                    </p>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-gray-800 mb-2">2. Drug Interaction Information</h3>
+                    <p>
+                        Drug interaction data is sourced from DrugBank database. While we strive for accuracy:
+                    </p>
+                    <ul class="list-disc ml-6 mt-2 space-y-1">
+                        <li>Information may be incomplete or outdated</li>
+                        <li>Absence of interaction data does NOT mean drugs are safe to combine</li>
+                        <li>Individual reactions may vary based on your health condition</li>
+                        <li>ALWAYS consult a healthcare provider before starting, stopping, or changing medications</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-gray-800 mb-2">3. Mental Health Symptom Tracking</h3>
+                    <p>
+                        Symptom tracking features are for informational purposes only:
+                    </p>
+                    <ul class="list-disc ml-6 mt-2 space-y-1">
+                        <li>This is NOT a diagnostic tool</li>
+                        <li>Symptom categories are based on WHO ICD-10 classifications</li>
+                        <li>If you experience suicidal thoughts or self-harm urges, <strong>seek immediate professional help</strong></li>
+                        <li>Emergency contacts: National Suicide Prevention Lifeline (988), Emergency Services (911)</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-gray-800 mb-2">4. Caregiver-Patient Relationship</h3>
+                    <p>
+                        If you use caregiver monitoring features:
+                    </p>
+                    <ul class="list-disc ml-6 mt-2 space-y-1">
+                        <li>Patients must explicitly approve caregiver access</li>
+                        <li>Caregivers can view symptom records and drug searches of approved patients</li>
+                        <li>Caregivers are notified of concerning symptoms (severity 3+, suicidal thoughts, self-harm)</li>
+                        <li>This does NOT replace professional mental health care</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-gray-800 mb-2">5. Privacy & Data</h3>
+                    <p>
+                        By using Happy Healthy:
+                    </p>
+                    <ul class="list-disc ml-6 mt-2 space-y-1">
+                        <li>Your data is stored securely and never shared with third parties</li>
+                        <li>You can delete your account and data at any time</li>
+                        <li>Caregivers only see data from approved patient relationships</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-gray-800 mb-2">6. Limitation of Liability</h3>
+                    <p>
+                        Happy Healthy and its developers are NOT liable for:
+                    </p>
+                    <ul class="list-disc ml-6 mt-2 space-y-1">
+                        <li>Any medical decisions made based on information from this app</li>
+                        <li>Adverse drug reactions or interactions</li>
+                        <li>Health outcomes related to symptom tracking</li>
+                        <li>Inaccurate, incomplete, or outdated information</li>
+                    </ul>
+                </section>
+
+                <section class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+                    <p class="font-bold text-yellow-800">
+                        ⚠️ EMERGENCY NOTICE: If you are experiencing a medical emergency, 
+                        call 911 or your local emergency services immediately. Do not rely on this app for emergency medical assistance.
+                    </p>
+                </section>
+            </div>
+        </div>
+
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+            
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+                <label class="flex items-start cursor-pointer">
+                    <input type="checkbox" name="accept_disclaimer" required 
+                           class="mt-1 mr-3 h-5 w-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                    <span class="text-sm text-gray-800">
+                        <strong>I have read and understand the above disclaimer.</strong>
+                        I acknowledge that Happy Healthy is not a substitute for professional medical advice, 
+                        and I agree to consult healthcare providers for all medical decisions.
+                    </span>
+                </label>
+            </div>
+
+            {% if error %}
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <button type="submit" 
+                    class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-4 rounded-xl font-bold text-lg transition transform hover:scale-105 shadow-lg">
+                I Accept - Continue to Happy Healthy
+            </button>
+        </form>
+
+        <p class="text-xs text-gray-500 text-center mt-4">
+            By clicking "I Accept", you agree to these terms. Timestamp will be recorded for your records.
+        </p>
+    </div>
+</div>
+{% endblock %}
