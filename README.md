@@ -1,5 +1,13 @@
 # Happy Healthy - Quick Start Guide
 
+## ⚠️ IMPORTANT: DrugBank XML File Not Included
+
+The DrugBank XML database file (`full database.xml`) is **NOT included** in this repository because:
+- File size: 1.8 GB (exceeds GitHub's 100 MB limit)
+- Contains licensed data that shouldn't be publicly distributed
+- Too large for version control  
+Please refer to DRUGBANK_SETUP_REQUIRED.md Document
+
 ## 🎉 Your Django Application is Ready!
 
 A curative-focused mobile application to tackle psychiatric medication challenges built with Django and DrugBank Database
