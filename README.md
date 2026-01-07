@@ -6,6 +6,8 @@ The DrugBank XML database file (`full database.xml`) is **NOT included** in this
 - File size: 1.8 GB (exceeds GitHub's 100 MB limit)
 - Contains licensed data that shouldn't be publicly distributed
 - Too large for version control
+
+
 Please refer to DRUGBANK_SETUP_REQUIRED.md Document   
 You may use the following Google Drive to download the XML : https://go.drugbank.com/releases/5-1-14/downloads/all-full-database   
 After downloading the file please extract the xml into the "static/" folder  
