@@ -39,7 +39,6 @@
                     </span>
                 </button>
             </form>
-            <p class="text-xs text-gray-500 mt-2">Page <strong id="currentPage">1</strong> • Showing <strong id="resultCount">{{ all_drugs|length }}</strong> of {{ total_drugs|default:0 }} drugs</p>
 
             {% if show_lite_dataset_disclaimer %}
             <div class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
@@ -70,7 +69,7 @@
         </div>
         {% endif %}
 
-        <div class="overflow-x-auto">
+        <div class="hidden md:block overflow-x-auto">
             <table class="min-w-full bg-white border border-gray-200 rounded-xl overflow-hidden">
                 <thead class="bg-gradient-to-r from-blue-500 to-blue-600 text-white sticky top-0">
                     <tr>
@@ -88,6 +87,8 @@
                         data-name="{{ drug.name|lower }}" 
                         data-synonyms="{{ drug.synonyms|join:','|lower }}"
                         data-id="{{ drug.drugbank_id|lower }}"
+                        data-type="{{ drug.type|default:'small molecule'|lower }}"
+                        data-description="{{ drug.description|default:'No description available'|escape }}"
                         data-categories="{{ drug.categories|join:','|lower }}">
                         <td class="px-4 py-3">
                             <div class="font-semibold text-gray-800">{{ drug.name }}</div>
@@ -134,9 +135,11 @@
                 </tbody>
             </table>
         </div>
+
+        <div id="drugCardsContainer" class="mt-4 space-y-3 md:hidden"></div>
         
         <!-- Pagination Controls -->
-        <div id="paginationContainer" class="flex justify-center items-center gap-2 mt-6">
+        <div id="paginationContainer" class="hidden justify-center items-center gap-2 mt-6">
             <button id="prevPage" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition">
                 ← Prev
             </button>
@@ -153,16 +156,17 @@
 const searchForm = document.getElementById('searchForm');
 const searchInput = document.getElementById('searchInput');
 const drugTableBody = document.getElementById('drugTableBody');
-const resultCount = document.getElementById('resultCount');
-const currentPageEl = document.getElementById('currentPage');
+const drugCardsContainer = document.getElementById('drugCardsContainer');
 const prevPageBtn = document.getElementById('prevPage');
 const nextPageBtn = document.getElementById('nextPage');
 const pageNumbers = document.getElementById('pageNumbers');
+const paginationContainer = document.getElementById('paginationContainer');
 
 let currentPage = 1;
 let totalPages = 1;
 let allResults = [];
-const resultsPerPage = 20;
+const initialResultCount = Number('{{ total_drugs|default:0 }}') || 0;
+const resultsPerPage = Math.max(20, initialResultCount || 20);
 
 // Only search when form is submitted (Enter key or Search button)
 searchForm.addEventListener('submit', function(e) {
@@ -188,6 +192,15 @@ searchForm.addEventListener('submit', function(e) {
             </td>
         </tr>
     `;
+    drugCardsContainer.innerHTML = `
+        <article class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm text-center text-gray-500">
+            <svg class="animate-spin h-8 w-8 mx-auto mb-2 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Searching...
+        </article>
+    `;
     
     // Fetch filtered results from API
     fetch(`/drugs/search/api/?q=${encodeURIComponent(query)}`)
@@ -196,8 +209,6 @@ searchForm.addEventListener('submit', function(e) {
             allResults = data.results;
             currentPage = 1;
             totalPages = Math.ceil(allResults.length / resultsPerPage);
-            
-            resultCount.textContent = data.total.toLocaleString();
             
             if (allResults.length === 0) {
                 drugTableBody.innerHTML = `
@@ -215,6 +226,19 @@ searchForm.addEventListener('submit', function(e) {
                         </td>
                     </tr>
                 `;
+                drugCardsContainer.innerHTML = `
+                    <article class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm text-center">
+                        <div class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-500 mb-3">
+                            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="m15 9-6 6"></path>
+                                <path d="m9 9 6 6"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">No Drugs Found</h3>
+                        <p class="text-sm text-gray-600">No results matching "${query}"</p>
+                    </article>
+                `;
                 updatePagination();
                 return;
             }
@@ -231,12 +255,18 @@ searchForm.addEventListener('submit', function(e) {
                     </td>
                 </tr>
             `;
+            drugCardsContainer.innerHTML = `
+                <article class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm text-center text-red-500">
+                    Error loading results. Please try again.
+                </article>
+            `;
         });
 });
 
 function displayCurrentPage() {
     // Clear table
     drugTableBody.innerHTML = '';
+    drugCardsContainer.innerHTML = '';
     
     // Calculate start and end indices
     const start = (currentPage - 1) * resultsPerPage;
@@ -268,7 +298,7 @@ function displayCurrentPage() {
                     </td>
                     <td class="px-4 py-3">
                         <span class="inline-block px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">
-                            ${drug.type.substring(0, 20)}
+                            ${(drug.type || 'small molecule').substring(0, 20)}
                         </span>
                     </td>
                     <td class="px-4 py-3">
@@ -288,9 +318,31 @@ function displayCurrentPage() {
                 `;
                 
         drugTableBody.appendChild(row);
+
+        const card = document.createElement('article');
+        card.className = 'rounded-2xl border border-gray-200 bg-white p-4 shadow-sm';
+        card.innerHTML = `
+            <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="font-semibold text-gray-800 text-base leading-tight">${drug.name}</div>
+                    <div class="mt-1 text-xs font-mono text-gray-600">${drug.drugbank_id}</div>
+                </div>
+                <span class="inline-flex shrink-0 items-center rounded-full bg-purple-100 px-2.5 py-1 text-xs font-semibold text-purple-700">
+                    ${(drug.type || 'small molecule').substring(0, 20)}
+                </span>
+            </div>
+            <p class="mt-3 text-sm text-gray-600 leading-6">${drug.description || 'No description available'}</p>
+            <div class="mt-3 flex flex-wrap gap-1.5">
+                ${categoriesHtml}
+            </div>
+            <div class="mt-4 flex items-center justify-end">
+                <a href="/drugs/detail/${drug.drugbank_id}/" class="inline-flex items-center rounded-lg bg-blue-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-600">
+                    View
+                </a>
+            </div>
+        `;
+        drugCardsContainer.appendChild(card);
     });
-    
-    currentPageEl.textContent = currentPage;
 }
 
 function updatePagination() {
@@ -302,11 +354,12 @@ function updatePagination() {
     pageNumbers.innerHTML = '';
     
     if (totalPages <= 1) {
-        document.getElementById('paginationContainer').style.display = 'none';
+        paginationContainer.classList.add('hidden');
         return;
     }
     
-    document.getElementById('paginationContainer').style.display = 'flex';
+    paginationContainer.classList.remove('hidden');
+    paginationContainer.classList.add('flex');
     
     // Show max 5 page numbers
     let startPage = Math.max(1, currentPage - 2);
@@ -349,11 +402,16 @@ nextPageBtn.addEventListener('click', () => {
 window.addEventListener('load', () => {
     const rows = document.querySelectorAll('.drug-row');
     allResults = Array.from(rows).map(row => ({
-        name: row.querySelector('.font-semibold').textContent,
-        html: row.outerHTML
+        name: row.dataset.name || row.querySelector('.font-semibold').textContent,
+        drugbank_id: row.dataset.id || row.querySelector('.font-mono').textContent,
+        type: row.dataset.type || 'small molecule',
+        description: row.dataset.description || 'No description available',
+        synonyms: (row.dataset.synonyms || '').split(',').filter(Boolean),
+        categories: (row.dataset.categories || '').split(',').filter(Boolean)
     }));
     totalPages = Math.ceil(rows.length / resultsPerPage);
     updatePagination();
+    displayCurrentPage();
 });
 </script>
 {% endblock %}
