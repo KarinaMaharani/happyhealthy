@@ -20,9 +20,10 @@
         <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
             <p class="font-semibold mb-1">Registration note</p>
             <p>{{ auth_disclaimer }}</p>
-            <p class="mt-2">Current email mode: <strong>{{ email_mode_label }}</strong>.</p>
             {% if demo_accounts %}
             <p class="mt-2">Deployment previews already seed mock patient and caregiver accounts. {% if registration_locked %}You cannot register while demo mode is on. You can log in immediately using the demo accounts on the login page.{% else %}If you only want to explore the app, use the demo login from the login page instead of creating another account.{% endif %}</p>
+            {% else %}
+            <p class="mt-2">Current email mode: <strong>{{ email_mode_label }}</strong>.</p>
             {% endif %}
         </div>
         {% endif %}
