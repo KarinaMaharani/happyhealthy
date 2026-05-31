@@ -40,6 +40,7 @@ static/full database.xml
 static/drugbank.xml
 data/
 *.xml
+!static/drugbank_lite.xml
 
 # IDE
 .vscode/

@@ -21,6 +21,10 @@ class DrugBankService:
     def _find_drugbank_xml(self):
         """Find DrugBank XML file in common locations"""
         possible_paths = [
+            # Lite dataset (preferred for deployment)
+            Path(__file__).parent.parent / 'static' / 'drugbank_lite.xml',
+            Path(__file__).parent.parent / 'data' / 'drugbank_lite.xml',
+            Path.home() / '.data' / 'drugbank' / 'drugbank_lite.xml',
             # Static folder (where user placed it)
             Path(__file__).parent.parent / 'static' / 'full database.xml',
             Path(__file__).parent.parent / 'static' / 'drugbank.xml',

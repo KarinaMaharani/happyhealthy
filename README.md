@@ -1,5 +1,11 @@
 # Happy Healthy - Quick Start Guide
 
+## Deployment Dataset Disclaimer
+
+- The deployed version uses a **lite DrugBank dataset** (`static/drugbank_lite.xml`) capped to about **80 MB** for repository and hosting limits.
+- This lite dataset is a subset of the full DrugBank release and may not include all drugs, interactions, or metadata.
+- For more complete local testing, use the full `full database.xml` file as documented in `DRUGBANK_SETUP_REQUIRED.md`.
+
 ## ⚠️ IMPORTANT: DrugBank XML File Not Included
 
 The DrugBank XML database file (`full database.xml`) is **NOT included** in this repository because:
