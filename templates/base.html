@@ -12,6 +12,7 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
         }
         .mobile-container {
             max-width: 400px;
@@ -19,6 +20,8 @@
             min-height: 100vh;
             background: #f8f9fa;
             position: relative;
+            overflow-x: hidden;
+            overflow-y: auto;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
         }
         .top-header {
@@ -63,8 +66,8 @@
     <div class="mobile-container">
         <!-- Header -->
         <div class="top-header bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 shadow-sm">
-            <div class="flex justify-between items-center">
-                <h1 class="text-lg sm:text-xl font-bold flex items-center gap-2 whitespace-nowrap">
+            <div class="flex justify-between items-center gap-4">
+                <h1 class="text-base sm:text-lg font-bold flex items-center gap-2 whitespace-nowrap shrink-0">
                     <span class="brand-icon w-8 h-8 rounded-full bg-white/15">
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M8 3v4" />
@@ -77,9 +80,9 @@
                     </span>
                     <span class="leading-none">Happy Healthy</span>
                 </h1>
-                <div class="flex items-center gap-2 min-w-0">
+                <div class="flex items-center gap-2 min-w-0 flex-1 justify-end">
                     {% if user.is_authenticated %}
-                    <div class="text-right min-w-0 max-w-[150px] sm:max-w-[180px]">
+                    <div class="text-right min-w-0 max-w-[135px] sm:max-w-[165px]">
                         <span class="block text-xs sm:text-sm truncate">Hi, {{ user.username }}!</span>
                         <span class="block text-[10px] sm:text-xs opacity-80 truncate">{{ user.profile.get_role_display }}</span>
                     </div>
