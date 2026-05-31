@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
+from django.conf import settings
 from .services import DrugBankService
 from .models import DrugSearch, DrugInteractionCheck, SavedDrug
 
@@ -60,7 +61,11 @@ def search_drugs_api(request):
 
 
 def search_drugs(request):
-    context = {'page_title': 'Search Drugs'}
+    context = {
+        'page_title': 'Search Drugs',
+        'show_lite_dataset_disclaimer': getattr(settings, 'SHOW_LITE_DATASET_DISCLAIMER', False),
+        'lite_dataset_disclaimer_text': getattr(settings, 'LITE_DATASET_DISCLAIMER_TEXT', ''),
+    }
     
     # Get all drugs for display and filtering
     service = DrugBankService()

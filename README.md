@@ -50,6 +50,17 @@ DEMO_CAREGIVER_EMAIL=demo.caregiver@example.com
 
 These values can be changed through environment variables. The comments in `happyhealthy/settings.py` show which settings to keep enabled for deployment and which ones to turn off for local development.
 
+### Lite Dataset Disclaimer Toggle
+
+The search page disclaimer for the demo dataset is also configurable:
+
+```env
+SHOW_LITE_DATASET_DISCLAIMER=True
+LITE_DATASET_DISCLAIMER_TEXT=This demo uses a curated lite DrugBank subset, so search results and interaction coverage are intentionally limited.
+```
+
+Set `SHOW_LITE_DATASET_DISCLAIMER=False` if you want to hide that notice.
+
 ## ⚠️ IMPORTANT: DrugBank XML File Not Included
 
 The DrugBank XML database file (`full database.xml`) is **NOT included** in this repository because:

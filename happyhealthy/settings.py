@@ -156,10 +156,22 @@ else:
 DEMO_ACCOUNTS_ENABLED = os.getenv('DEMO_ACCOUNTS_ENABLED', 'True' if IS_DEPLOYMENT else 'False') == 'True'
 DEMO_AUTOFILL_ENABLED = os.getenv('DEMO_AUTOFILL_ENABLED', 'True' if DEMO_ACCOUNTS_ENABLED else 'False') == 'True'
 SHOW_AUTH_DISCLAIMER = os.getenv('SHOW_AUTH_DISCLAIMER', 'True') == 'True'
+REGISTRATION_DISABLED_IN_DEMO_MODE = os.getenv(
+    'REGISTRATION_DISABLED_IN_DEMO_MODE',
+    'True' if DEMO_ACCOUNTS_ENABLED else 'False'
+) == 'True'
 DEMO_PATIENT_USERNAME = os.getenv('DEMO_PATIENT_USERNAME', 'demo_patient')
 DEMO_PATIENT_PASSWORD = os.getenv('DEMO_PATIENT_PASSWORD', 'PatientDemo123!')
 DEMO_PATIENT_EMAIL = os.getenv('DEMO_PATIENT_EMAIL', 'demo.patient@example.com')
 DEMO_CAREGIVER_USERNAME = os.getenv('DEMO_CAREGIVER_USERNAME', 'demo_caregiver')
 DEMO_CAREGIVER_PASSWORD = os.getenv('DEMO_CAREGIVER_PASSWORD', 'CaregiverDemo123!')
 DEMO_CAREGIVER_EMAIL = os.getenv('DEMO_CAREGIVER_EMAIL', 'demo.caregiver@example.com')
+SHOW_LITE_DATASET_DISCLAIMER = os.getenv(
+    'SHOW_LITE_DATASET_DISCLAIMER',
+    'True' if DEMO_ACCOUNTS_ENABLED else 'False'
+) == 'True'
+LITE_DATASET_DISCLAIMER_TEXT = os.getenv(
+    'LITE_DATASET_DISCLAIMER_TEXT',
+    'This demo uses a curated lite DrugBank subset, so search results and interaction coverage are intentionally limited.'
+)
 EMAIL_VERIFICATION_REQUIRED = True

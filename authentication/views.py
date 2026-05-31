@@ -107,6 +107,7 @@ def ensure_demo_accounts():
 def get_auth_page_context():
     demo_accounts = ensure_demo_accounts()
     email_mode = 'SMTP (Gmail)' if settings.USE_SMTP_EMAIL else 'console email backend'
+    registration_locked = getattr(settings, 'REGISTRATION_DISABLED_IN_DEMO_MODE', False)
 
     return {
         'show_auth_disclaimer': settings.SHOW_AUTH_DISCLAIMER,
@@ -119,11 +120,24 @@ def get_auth_page_context():
         'email_mode_label': email_mode,
         'demo_accounts': demo_accounts,
         'demo_autofill_enabled': settings.DEMO_AUTOFILL_ENABLED,
+        'registration_locked': registration_locked,
     }
 
 
 def register(request):
     """Simplified registration without email verification"""
+    if getattr(settings, 'REGISTRATION_DISABLED_IN_DEMO_MODE', False):
+        if request.method == 'POST':
+            messages.info(
+                request,
+                'Registration is disabled in demo mode. Please log in with one of the demo accounts.'
+            )
+            return redirect('login')
+
+        context = {'form': CustomUserCreationForm()}
+        context.update(get_auth_page_context())
+        return render(request, 'auth/register.html', context)
+
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         role = request.POST.get('role')
