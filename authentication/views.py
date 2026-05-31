@@ -8,6 +8,8 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.urls import reverse
 from django import forms
+from django.db import OperationalError, ProgrammingError
+from django.utils import timezone
 from .models import UserProfile, CaregiverPatientRelationship, SymptomRecord
 
 
@@ -19,15 +21,112 @@ class CustomUserCreationForm(UserCreationForm):
         fields = ('username', 'email', 'password1', 'password2')
 
 
+def ensure_demo_accounts():
+    """Create demo accounts for deployment previews when enabled."""
+    if not getattr(settings, 'DEMO_ACCOUNTS_ENABLED', False):
+        return []
+
+    accounts = [
+        {
+            'label': 'Demo Patient',
+            'username': settings.DEMO_PATIENT_USERNAME,
+            'password': settings.DEMO_PATIENT_PASSWORD,
+            'email': settings.DEMO_PATIENT_EMAIL,
+            'role': 'patient',
+        },
+        {
+            'label': 'Demo Caregiver',
+            'username': settings.DEMO_CAREGIVER_USERNAME,
+            'password': settings.DEMO_CAREGIVER_PASSWORD,
+            'email': settings.DEMO_CAREGIVER_EMAIL,
+            'role': 'caregiver',
+        },
+    ]
+
+    try:
+        created_users = {}
+        for account in accounts:
+            user, created = User.objects.get_or_create(
+                username=account['username'],
+                defaults={'email': account['email']},
+            )
+
+            user_changed = created
+            if user.email != account['email']:
+                user.email = account['email']
+                user_changed = True
+            if created or not user.check_password(account['password']):
+                user.set_password(account['password'])
+                user_changed = True
+            if user_changed:
+                user.save()
+
+            profile, _ = UserProfile.objects.get_or_create(
+                user=user,
+                defaults={
+                    'role': account['role'],
+                    'disclaimer_accepted': True,
+                    'disclaimer_accepted_at': timezone.now(),
+                },
+            )
+            profile_changed = False
+            if profile.role != account['role']:
+                profile.role = account['role']
+                profile_changed = True
+            if not profile.disclaimer_accepted:
+                profile.disclaimer_accepted = True
+                profile.disclaimer_accepted_at = profile.disclaimer_accepted_at or timezone.now()
+                profile_changed = True
+            if profile_changed:
+                profile.save()
+
+            created_users[account['role']] = user
+
+        caregiver = created_users.get('caregiver')
+        patient = created_users.get('patient')
+        if caregiver and patient:
+            relationship, _ = CaregiverPatientRelationship.objects.get_or_create(
+                caregiver=caregiver,
+                patient=patient,
+                defaults={
+                    'status': 'active',
+                    'approved_date': timezone.now(),
+                    'request_message': 'Demo relationship for deployment previews.',
+                },
+            )
+            if relationship.status != 'active':
+                relationship.status = 'active'
+                relationship.approved_date = relationship.approved_date or timezone.now()
+                relationship.save(update_fields=['status', 'approved_date', 'updated_at'])
+    except (OperationalError, ProgrammingError):
+        return []
+
+    return accounts
+
+
+def get_auth_page_context():
+    demo_accounts = ensure_demo_accounts()
+    email_mode = 'SMTP (Gmail)' if settings.USE_SMTP_EMAIL else 'console email backend'
+
+    return {
+        'show_auth_disclaimer': settings.SHOW_AUTH_DISCLAIMER,
+        'auth_disclaimer': (
+            'Deployment preview uses demo-friendly authentication. Use the demo accounts below, '
+            'and remember email delivery depends on the current backend configuration.'
+            if settings.DEMO_ACCOUNTS_ENABLED
+            else 'Local mode is active. Registration uses your local settings and email backend configuration.'
+        ),
+        'email_mode_label': email_mode,
+        'demo_accounts': demo_accounts,
+        'demo_autofill_enabled': settings.DEMO_AUTOFILL_ENABLED,
+    }
+
+
 def register(request):
     """Simplified registration without email verification"""
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         role = request.POST.get('role')
-        
-        # Debug: print what role we received
-        print(f"DEBUG: Received role from POST: {role}")
-        print(f"DEBUG: All POST data: {request.POST}")
         
         # Validate role
         if not role or role not in ['patient', 'caregiver']:
@@ -45,9 +144,6 @@ def register(request):
                 role=role
             )
             
-            print(f"DEBUG: User created with role: {profile.role}")
-            print(f"DEBUG: Profile role verification: {user.profile.role}")
-            
             # Auto-login after registration
             login(request, user)
             
@@ -62,8 +158,10 @@ def register(request):
             return redirect('drug_home')
     else:
         form = CustomUserCreationForm()
-    
-    return render(request, 'auth/register.html', {'form': form})
+
+    context = {'form': form}
+    context.update(get_auth_page_context())
+    return render(request, 'auth/register.html', context)
 
 
 def accept_disclaimer(request):
@@ -102,9 +200,7 @@ def custom_login(request):
             
             # Refresh user from database to ensure profile is loaded
             request.user.refresh_from_db()
-            
-            print(f"DEBUG: Login - User {user.username} has role: {user.profile.role}")
-            
+
             # Check if disclaimer accepted
             if not user.profile.disclaimer_accepted:
                 return redirect('accept_disclaimer')
@@ -113,8 +209,9 @@ def custom_login(request):
             return redirect('drug_home')
         else:
             messages.error(request, 'Invalid username or password.')
-    
-    return render(request, 'auth/login.html')
+
+    context = get_auth_page_context()
+    return render(request, 'auth/login.html', context)
 
 
 def verify_email(request, token):

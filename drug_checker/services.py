@@ -1,9 +1,11 @@
 from xml.etree import ElementTree
 import os
 from pathlib import Path
+import logging
 import threading
-import time
-import sys
+
+
+logger = logging.getLogger(__name__)
 
 
 class DrugBankService:
@@ -64,61 +66,17 @@ class DrugBankService:
                     f"{Path(__file__).parent.parent / 'static' / 'full database.xml'}"
                 )
             
-            print(f"\n{'='*70}")
-            print(f"📂 Loading DrugBank database from: {xml_path}")
-            print(f"{'='*70}")
-            print("⏳ Parsing XML file...", end='', flush=True)
-            
-            # Progress tracking with timer
-            start_time = time.time()
-            stop_progress = threading.Event()
-            
-            def show_progress():
-                dot_count = 0
-                while not stop_progress.is_set():
-                    time.sleep(2)
-                    if not stop_progress.is_set():
-                        sys.stdout.write('.')
-                        sys.stdout.flush()
-                        dot_count += 1
-                        if dot_count % 5 == 0:  # Every 10 seconds
-                            elapsed = int(time.time() - start_time)
-                            print(f' [{elapsed}s]', end='', flush=True)
-            
-            progress_thread = threading.Thread(target=show_progress, daemon=True)
-            progress_thread.start()
-            
             try:
                 tree = ElementTree.parse(str(xml_path))
                 DrugBankService._shared_root = tree.getroot()
-                
-                stop_progress.set()
-                progress_thread.join(timeout=1)
-                
-                parse_elapsed = time.time() - start_time
-                print(f' ✅ ({parse_elapsed:.2f}s)')
-                
+
                 # Cache all drugs
-                print("📦 Caching all drugs...", end='', flush=True)
-                cache_start = time.time()
                 self._cache_all_drugs()
-                cache_elapsed = time.time() - cache_start
-                print(f' ✅ ({cache_elapsed:.2f}s)')
-                
-                total_elapsed = time.time() - start_time
-                print(f'{"="*70}')
-                print(f'✅ DATABASE LOADED SUCCESSFULLY!')
-                print(f'⏱️  Total loading time: {total_elapsed:.2f} seconds ({total_elapsed/60:.2f} minutes)')
-                print(f'📊 Total drugs cached: {len(DrugBankService._shared_drugs_cache):,}')
-                print(f'💾 Memory: XML tree + drug cache ready')
-                print(f'{"="*70}\n')
-                
+
                 DrugBankService._is_loaded = True
                 return DrugBankService._shared_root
             except Exception as e:
-                stop_progress.set()
-                progress_thread.join(timeout=1)
-                print(f'\n❌ Error loading database: {e}\n')
+                logger.warning('Error loading DrugBank database: %s', e)
                 raise
     
     def _cache_all_drugs(self):

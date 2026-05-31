@@ -14,6 +14,8 @@ load_dotenv(BASE_DIR / '.env')
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-lq$9%d3p%runkda2o8-#&ht6^9eows35h@cx=vi)5tlaw2gq-$')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
+APP_ENV = os.getenv('APP_ENV', 'deployment' if os.getenv('VERCEL') else 'local')
+IS_DEPLOYMENT = APP_ENV == 'deployment'
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.0.2.2', 'happyhealthy.vercel.app', '.vercel.app']
 
 # DrugBank API Configuration
@@ -121,13 +123,43 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 # Email Configuration
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development - prints to console
-# For production, use SMTP:
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'karinamaharani.mipa2023@gmail.com')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')  # Use App Password from Google
-DEFAULT_FROM_EMAIL = os.getenv('EMAIL_HOST_USER', 'karinamaharani.mipa2023@gmail.com')
+# Local option:
+#   USE_SMTP_EMAIL=False
+#   EMAIL_BACKEND will switch to Django's console backend for safe local testing.
+# Deployment option:
+#   USE_SMTP_EMAIL=True
+#   Set EMAIL_HOST_USER and EMAIL_HOST_PASSWORD in your environment variables.
+USE_SMTP_EMAIL = os.getenv('USE_SMTP_EMAIL', 'True' if IS_DEPLOYMENT else 'False') == 'True'
+
+if USE_SMTP_EMAIL:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')  # Gmail App Password
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER or 'noreply@happyhealthy.local'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    EMAIL_HOST = 'localhost'
+    EMAIL_PORT = 25
+    EMAIL_USE_TLS = False
+    EMAIL_HOST_USER = ''
+    EMAIL_HOST_PASSWORD = ''
+    DEFAULT_FROM_EMAIL = 'noreply@happyhealthy.local'
+
+# Demo account toggles.
+# Local option:
+#   DEMO_ACCOUNTS_ENABLED=False to keep auth pages empty.
+# Deployment option:
+#   DEMO_ACCOUNTS_ENABLED=True to create mock patient/caregiver accounts and autofill login.
+DEMO_ACCOUNTS_ENABLED = os.getenv('DEMO_ACCOUNTS_ENABLED', 'True' if IS_DEPLOYMENT else 'False') == 'True'
+DEMO_AUTOFILL_ENABLED = os.getenv('DEMO_AUTOFILL_ENABLED', 'True' if DEMO_ACCOUNTS_ENABLED else 'False') == 'True'
+SHOW_AUTH_DISCLAIMER = os.getenv('SHOW_AUTH_DISCLAIMER', 'True') == 'True'
+DEMO_PATIENT_USERNAME = os.getenv('DEMO_PATIENT_USERNAME', 'demo_patient')
+DEMO_PATIENT_PASSWORD = os.getenv('DEMO_PATIENT_PASSWORD', 'PatientDemo123!')
+DEMO_PATIENT_EMAIL = os.getenv('DEMO_PATIENT_EMAIL', 'demo.patient@example.com')
+DEMO_CAREGIVER_USERNAME = os.getenv('DEMO_CAREGIVER_USERNAME', 'demo_caregiver')
+DEMO_CAREGIVER_PASSWORD = os.getenv('DEMO_CAREGIVER_PASSWORD', 'CaregiverDemo123!')
+DEMO_CAREGIVER_EMAIL = os.getenv('DEMO_CAREGIVER_EMAIL', 'demo.caregiver@example.com')
 EMAIL_VERIFICATION_REQUIRED = True

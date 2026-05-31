@@ -6,6 +6,50 @@
 - This lite dataset is a subset of the full DrugBank release and may not include all drugs, interactions, or metadata.
 - For more complete local testing, use the full `full database.xml` file as documented in `DRUGBANK_SETUP_REQUIRED.md`.
 
+## Authentication And Email Modes
+
+The codebase now supports two clearly documented auth/email modes in `happyhealthy/settings.py`:
+
+- **Local mode**: set `USE_SMTP_EMAIL=False` and `DEMO_ACCOUNTS_ENABLED=False` if you want console-only email and no seeded demo users.
+- **Deployment mode**: set `USE_SMTP_EMAIL=True` and `DEMO_ACCOUNTS_ENABLED=True` if you want Gmail SMTP plus demo patient/caregiver accounts for preview builds.
+
+### SMTP Tutorial (Gmail)
+
+1. Turn on 2-Step Verification for the Gmail account you want to send from.
+2. Generate a Gmail App Password.
+3. Put these environment variables in your local `.env` or in Vercel Project Settings:
+
+```env
+USE_SMTP_EMAIL=True
+EMAIL_HOST_USER=your-address@gmail.com
+EMAIL_HOST_PASSWORD=your-16-character-app-password
+```
+
+4. If you want local testing without real email delivery, switch back to:
+
+```env
+USE_SMTP_EMAIL=False
+```
+
+When `USE_SMTP_EMAIL=False`, Django uses the console email backend so registration-related email content is printed locally instead of being sent.
+
+### Demo Accounts For Deployment
+
+When `DEMO_ACCOUNTS_ENABLED=True`, the login/register pages expose seeded mock accounts for preview use:
+
+```env
+DEMO_ACCOUNTS_ENABLED=True
+DEMO_AUTOFILL_ENABLED=True
+DEMO_PATIENT_USERNAME=demo_patient
+DEMO_PATIENT_PASSWORD=PatientDemo123!
+DEMO_PATIENT_EMAIL=demo.patient@example.com
+DEMO_CAREGIVER_USERNAME=demo_caregiver
+DEMO_CAREGIVER_PASSWORD=CaregiverDemo123!
+DEMO_CAREGIVER_EMAIL=demo.caregiver@example.com
+```
+
+These values can be changed through environment variables. The comments in `happyhealthy/settings.py` show which settings to keep enabled for deployment and which ones to turn off for local development.
+
 ## ⚠️ IMPORTANT: DrugBank XML File Not Included
 
 The DrugBank XML database file (`full database.xml`) is **NOT included** in this repository because:

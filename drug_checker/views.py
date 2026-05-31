@@ -90,14 +90,19 @@ def drug_detail(request, drugbank_id):
 
 
 def interaction_checker(request):
-    context = {'page_title': 'Check Drug Interactions'}
+    service = DrugBankService()
+    context = {
+        'page_title': 'Check Drug Interactions',
+        'all_drugs': service.get_all_drugs(),
+    }
     
     if request.method == 'POST':
         drug1 = request.POST.get('drug1', '').strip()
         drug2 = request.POST.get('drug2', '').strip()
+        context['drug1_name'] = request.POST.get('drug1_name', '').strip()
+        context['drug2_name'] = request.POST.get('drug2_name', '').strip()
         
         if drug1 and drug2:
-            service = DrugBankService()
             result = service.check_drug_interactions(drug1, drug2)
             
             if result['success']:

@@ -1,4 +1,8 @@
 from django.apps import AppConfig
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class DrugCheckerConfig(AppConfig):
@@ -11,19 +15,9 @@ class DrugCheckerConfig(AppConfig):
         # Only preload in the main process (not in reloader)
         if os.environ.get('RUN_MAIN') == 'true':
             try:
-                print("\n" + "="*60)
-                print("🔄 Preloading DrugBank database...")
-                print("This will take 30-60 seconds but speeds up first search!")
-                print("="*60 + "\n")
-                
                 from .services import DrugBankService
                 service = DrugBankService()
                 # Access root to trigger loading
                 _ = service.root
-                
-                print("\n" + "="*60)
-                print("✅ DrugBank database preloaded successfully!")
-                print("All drug searches will now be instant.")
-                print("="*60 + "\n")
             except Exception as e:
-                print(f"\n⚠️  Warning: Could not preload DrugBank database: {e}\n")
+                logger.warning('Could not preload DrugBank database: %s', e)

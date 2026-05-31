@@ -5,38 +5,80 @@
 {% block content %}
 <div class="p-4">
     <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">⚠️ Drug Interaction Checker</h2>
+        <div class="flex items-start gap-3 mb-4">
+            <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 9v4"></path>
+                    <path d="M12 17h.01"></path>
+                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                </svg>
+            </span>
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">Drug Interaction Checker</h2>
+                <p class="text-sm text-gray-600">Choose two drugs from a searchable dropdown to compare interaction warnings.</p>
+            </div>
+        </div>
         
-        <form method="POST" class="space-y-4">
+        <form method="POST" class="space-y-4" id="interactionForm">
             {% csrf_token %}
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Drug 1</label>
-                <div class="relative">
+                <div class="relative searchable-picker" id="drug1Picker">
                     <input type="text" 
                            name="drug1_name"
                            id="drug1Input" 
-                           placeholder="Start typing drug name..."
-                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                           value="{{ drug1_name|default:'' }}"
+                           placeholder="Search and select a drug"
+                           class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                            autocomplete="off"
                            required>
                     <input type="hidden" name="drug1" id="drug1Id" value="{{ drug1 }}">
-                    <div id="autocomplete1" class="absolute z-10 w-full bg-white border border-gray-300 rounded-xl shadow-lg mt-1 hidden max-h-64 overflow-y-auto"></div>
+                    <button type="button" class="absolute inset-y-0 right-0 px-4 text-gray-400 hover:text-gray-600 picker-toggle" aria-label="Toggle drug list">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="m6 9 6 6 6-6"></path>
+                        </svg>
+                    </button>
+                    <div class="picker-menu absolute z-20 w-full bg-white border border-gray-300 rounded-xl shadow-lg mt-1 hidden">
+                        <div class="max-h-64 overflow-y-auto p-1">
+                            {% for drug in all_drugs %}
+                            <button type="button" class="w-full text-left px-3 py-3 hover:bg-blue-50 rounded-lg picker-option" data-id="{{ drug.drugbank_id }}" data-name="{{ drug.name }}" data-search="{{ drug.name|lower }} {{ drug.drugbank_id|lower }} {{ drug.synonyms|join:' '|lower }}">
+                                <div class="font-semibold text-gray-800">{{ drug.name }}</div>
+                                <div class="text-xs text-gray-500">{{ drug.drugbank_id }} • {{ drug.type }}</div>
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
                 <p class="text-xs text-gray-500 mt-1">Selected ID: <span id="drug1IdDisplay" class="font-mono">{{ drug1|default:"None" }}</span></p>
             </div>
             
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Drug 2</label>
-                <div class="relative">
+                <div class="relative searchable-picker" id="drug2Picker">
                     <input type="text" 
                            name="drug2_name"
                            id="drug2Input" 
-                           placeholder="Start typing drug name..."
-                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                           value="{{ drug2_name|default:'' }}"
+                           placeholder="Search and select a drug"
+                           class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                            autocomplete="off"
                            required>
                     <input type="hidden" name="drug2" id="drug2Id" value="{{ drug2 }}">
-                    <div id="autocomplete2" class="absolute z-10 w-full bg-white border border-gray-300 rounded-xl shadow-lg mt-1 hidden max-h-64 overflow-y-auto"></div>
+                    <button type="button" class="absolute inset-y-0 right-0 px-4 text-gray-400 hover:text-gray-600 picker-toggle" aria-label="Toggle drug list">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="m6 9 6 6 6-6"></path>
+                        </svg>
+                    </button>
+                    <div class="picker-menu absolute z-20 w-full bg-white border border-gray-300 rounded-xl shadow-lg mt-1 hidden">
+                        <div class="max-h-64 overflow-y-auto p-1">
+                            {% for drug in all_drugs %}
+                            <button type="button" class="w-full text-left px-3 py-3 hover:bg-blue-50 rounded-lg picker-option" data-id="{{ drug.drugbank_id }}" data-name="{{ drug.name }}" data-search="{{ drug.name|lower }} {{ drug.drugbank_id|lower }} {{ drug.synonyms|join:' '|lower }}">
+                                <div class="font-semibold text-gray-800">{{ drug.name }}</div>
+                                <div class="text-xs text-gray-500">{{ drug.drugbank_id }} • {{ drug.type }}</div>
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
                 <p class="text-xs text-gray-500 mt-1">Selected ID: <span id="drug2IdDisplay" class="font-mono">{{ drug2|default:"None" }}</span></p>
             </div>
@@ -48,7 +90,7 @@
 
         <div class="mt-4 bg-blue-50 p-4 rounded-xl">
             <p class="text-sm text-blue-800">
-                <strong>Tip:</strong> Start typing a drug name and select from the suggestions. The DrugBank ID will be automatically filled.
+                <strong>Tip:</strong> Click the field, type to filter the dropdown, then choose an exact match. The DrugBank ID is filled automatically.
             </p>
         </div>
     </div>
@@ -72,7 +114,13 @@
         
         {% if total == 0 %}
         <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg text-center">
-            <div class="text-5xl mb-3">ℹ️</div>
+            <div class="inline-flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-blue-600 mb-3">
+                <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 16v-4"></path>
+                    <path d="M12 8h.01"></path>
+                </svg>
+            </div>
             <h4 class="text-lg font-bold text-blue-900 mb-2">No Interaction Data Available</h4>
             <p class="text-blue-800 mb-3">
                 No documented interactions found between <strong>{{ drug1 }}</strong> and <strong>{{ drug2 }}</strong> in our database.
@@ -120,67 +168,75 @@
 </div>
 
 <script>
-function setupAutocomplete(inputId, autocompleteId, hiddenInputId, displayId) {
+function setupPicker(rootId, inputId, hiddenInputId, displayId) {
+    const root = document.getElementById(rootId);
     const input = document.getElementById(inputId);
-    const autocomplete = document.getElementById(autocompleteId);
     const hiddenInput = document.getElementById(hiddenInputId);
     const display = document.getElementById(displayId);
-    let debounceTimer;
+    const menu = root.querySelector('.picker-menu');
+    const toggle = root.querySelector('.picker-toggle');
+    const options = Array.from(root.querySelectorAll('.picker-option'));
 
-    input.addEventListener('input', function(e) {
-        clearTimeout(debounceTimer);
-        const query = e.target.value.trim();
-        
-        if (query.length < 2) {
-            autocomplete.classList.add('hidden');
-            return;
-        }
-        
-        debounceTimer = setTimeout(() => {
-            fetch(`/drugs/autocomplete/?q=${encodeURIComponent(query)}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.results && data.results.length > 0) {
-                        autocomplete.innerHTML = data.results.map(drug => `
-                            <div class="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 autocomplete-item" 
-                                 data-name="${drug.name}" 
-                                 data-id="${drug.drugbank_id}">
-                                <div class="font-semibold text-gray-800">${drug.name}</div>
-                                <div class="text-xs text-gray-500">${drug.drugbank_id} • ${drug.type}</div>
-                            </div>
-                        `).join('');
-                        autocomplete.classList.remove('hidden');
-                        
-                        // Add click handlers
-                        autocomplete.querySelectorAll('.autocomplete-item').forEach(item => {
-                            item.addEventListener('click', function() {
-                                input.value = this.dataset.name;
-                                hiddenInput.value = this.dataset.id;
-                                display.textContent = this.dataset.id;
-                                autocomplete.classList.add('hidden');
-                            });
-                        });
-                    } else {
-                        autocomplete.classList.add('hidden');
-                    }
-                })
-                .catch(error => {
-                    console.error('Autocomplete error:', error);
-                    autocomplete.classList.add('hidden');
-                });
-        }, 300);
+    function updateVisibleOptions(query) {
+        const normalizedQuery = query.trim().toLowerCase();
+
+        options.forEach(option => {
+            const isVisible = !normalizedQuery || option.dataset.search.includes(normalizedQuery);
+            option.classList.toggle('hidden', !isVisible);
+        });
+    }
+
+    function openMenu() {
+        menu.classList.remove('hidden');
+        updateVisibleOptions(input.value);
+    }
+
+    function closeMenu() {
+        menu.classList.add('hidden');
+    }
+
+    input.addEventListener('focus', openMenu);
+    input.addEventListener('input', () => {
+        hiddenInput.value = '';
+        display.textContent = 'None';
+        openMenu();
     });
 
-    // Close autocomplete when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!input.contains(e.target) && !autocomplete.contains(e.target)) {
-            autocomplete.classList.add('hidden');
+    toggle.addEventListener('click', () => {
+        if (menu.classList.contains('hidden')) {
+            openMenu();
+            input.focus();
+        } else {
+            closeMenu();
+        }
+    });
+
+    options.forEach(option => {
+        option.addEventListener('click', () => {
+            input.value = option.dataset.name;
+            hiddenInput.value = option.dataset.id;
+            display.textContent = option.dataset.id;
+            closeMenu();
+        });
+    });
+
+    document.addEventListener('click', event => {
+        if (!root.contains(event.target)) {
+            closeMenu();
         }
     });
 }
 
-// Setup autocomplete for both drug inputs
-setupAutocomplete('drug1Input', 'autocomplete1', 'drug1Id', 'drug1IdDisplay');
-setupAutocomplete('drug2Input', 'autocomplete2', 'drug2Id', 'drug2IdDisplay');
+setupPicker('drug1Picker', 'drug1Input', 'drug1Id', 'drug1IdDisplay');
+setupPicker('drug2Picker', 'drug2Input', 'drug2Id', 'drug2IdDisplay');
+
+document.getElementById('interactionForm').addEventListener('submit', function(event) {
+    const drug1Id = document.getElementById('drug1Id');
+    const drug2Id = document.getElementById('drug2Id');
+    if (!drug1Id.value || !drug2Id.value) {
+        event.preventDefault();
+        alert('Please select both drugs from the filtered dropdown list before checking interactions.');
+    }
+});
 </script>
 {% endblock %}
